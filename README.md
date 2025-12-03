@@ -1,2 +1,2 @@
 # MangaReversible
-Front manga
+Front Manga
