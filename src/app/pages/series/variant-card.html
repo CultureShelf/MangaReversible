@@ -1,0 +1,185 @@
+<article class="card variant" [attr.data-status]="variant().collection?.status">
+  <div class="visual">
+    @let shown = current();
+    <div class="flip" [class.flipped]="flipped() && reverse()">
+      <div class="face">
+        @if (shown) {
+          <img class="cover zoomable" [src]="shown.url | imgUrl" [alt]="imageKinds[shown.kind]"
+               (click)="zoomed.set(shown.url)" />
+        } @else if (fallbackCover()) {
+          <img class="cover dim" [src]="fallbackCover() | imgUrl" alt="Couverture du tome (catalogue)" />
+        } @else {
+          <div class="cover-placeholder">?</div>
+        }
+      </div>
+      @if (reverse(); as rev) {
+        <div class="face back">
+          <img class="cover zoomable" [src]="rev.url | imgUrl" alt="Verso de la jaquette" (click)="zoomed.set(rev.url)" />
+        </div>
+      }
+    </div>
+
+    @if (reverse() && front()) {
+      <button class="small" (click)="flipped.set(!flipped())">↻ Retourner la jaquette</button>
+    }
+
+    @if (variant().images.length > 1) {
+      <div class="thumbs">
+        @for (img of variant().images; track img.id; let i = $index) {
+          <button class="thumb" [class.active]="i === selectedImage()" (click)="selectedImage.set(i); flipped.set(false)"
+                  [title]="imageKinds[img.kind] + (img.caption ? ' — ' + img.caption : '')">
+            <img [src]="img.url | imgUrl" [alt]="imageKinds[img.kind]" loading="lazy" />
+          </button>
+        }
+      </div>
+    }
+
+    @if (shown) {
+      <p class="caption muted">
+        {{ imageKinds[shown.kind] }}@if (shown.caption) { — {{ shown.caption }} }
+        <button class="link" (click)="removeImage(shown.id)" [disabled]="busy()" title="Supprimer ce visuel">✕</button>
+      </p>
+    } @else {
+      <p class="caption muted">Aucun visuel pour cette édition</p>
+    }
+  </div>
+
+  <div class="info">
+    @if (editing()) {
+      <app-variant-form [variant]="variant()" [busy]="busy()" (saved)="save($event)" (cancelled)="editing.set(false)" />
+    } @else {
+      <div class="row">
+        <span class="badge" [class.collector]="variant().type !== 'STANDARD'">{{ variantTypes[variant().type] }}</span>
+        @if (variant().printRun) {
+          <span class="badge">Tirage : {{ variant().printRun }} ex.</span>
+        }
+      </div>
+      <h3>{{ variant().name }}</h3>
+
+      <dl>
+        @if (variant().publisher) {
+          <dt>Éditeur</dt><dd>{{ variant().publisher }}</dd>
+        }
+        @if (variant().releaseDate) {
+          <dt>Sortie</dt><dd>{{ variant().releaseDate | date: 'longDate' }}</dd>
+        }
+        @if (variant().price !== null) {
+          <dt>Prix</dt><dd>{{ variant().price | currency: 'EUR' }}</dd>
+        }
+        @if (variant().isbn) {
+          <dt>ISBN</dt><dd>{{ variant().isbn }}</dd>
+        }
+        @if (variant().extras) {
+          <dt>Bonus</dt><dd>{{ variant().extras }}</dd>
+        }
+      </dl>
+      @if (variant().description) {
+        <p class="description">{{ variant().description }}</p>
+      }
+
+      <div class="status" role="group" aria-label="Dans ma collection">
+        <button [class.on]="!variant().collection" (click)="setStatus(null)" [disabled]="busy()">—</button>
+        @for (s of statuses; track s.value) {
+          <button [attr.data-status]="s.value" [class.on]="variant().collection?.status === s.value"
+                  (click)="setStatus(s.value)" [disabled]="busy()">
+            {{ s.label }}
+          </button>
+        }
+      </div>
+
+      @if (variant().collection; as item) {
+        @if (itemDraft) {
+          <form class="form-grid item-form" (ngSubmit)="saveItem()">
+            <label>
+              État
+              <select name="condition" [(ngModel)]="itemDraft.condition">
+                <option [ngValue]="null">—</option>
+                @for (c of conditions; track c.value) {
+                  <option [ngValue]="c.value">{{ c.label }}</option>
+                }
+              </select>
+            </label>
+            <label>
+              Acquis le
+              <input name="acquiredAt" type="date" [(ngModel)]="itemDraft.acquiredAt" />
+            </label>
+            <label>
+              Prix payé (€)
+              <input name="pricePaid" type="number" min="0" step="0.01" [(ngModel)]="itemDraft.pricePaid" />
+            </label>
+            <label>
+              Quantité
+              <input name="quantity" type="number" min="1" [(ngModel)]="itemDraft.quantity" />
+            </label>
+            <label class="full">
+              Notes
+              <input name="notes" [(ngModel)]="itemDraft.notes" maxlength="2000" />
+            </label>
+            <div class="row full">
+              <span class="spacer"></span>
+              <button type="button" (click)="itemDraft = null">Annuler</button>
+              <button class="primary" type="submit" [disabled]="busy()">Enregistrer</button>
+            </div>
+          </form>
+        } @else {
+          <p class="muted item">
+            @if (item.condition) { {{ conditionLabels[item.condition] }} · }
+            @if (item.acquiredAt) { acquis le {{ item.acquiredAt | date: 'shortDate' }} · }
+            @if (item.pricePaid !== null) { payé {{ item.pricePaid | currency: 'EUR' }} · }
+            @if (item.quantity > 1) { ×{{ item.quantity }} · }
+            <button class="link" (click)="editItem()">Mon exemplaire…</button>
+          </p>
+        }
+      }
+
+      @if (addingImage()) {
+        <form class="form-grid image-form" (ngSubmit)="addImage()">
+          <label>
+            Type de visuel
+            <select name="kind" [(ngModel)]="imageDraft.kind">
+              @for (k of imageKindOptions; track k.value) {
+                <option [ngValue]="k.value">{{ k.label }}</option>
+              }
+            </select>
+          </label>
+          <label>
+            Fichier
+            <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" (change)="onFile($event)" />
+          </label>
+          <label>
+            …ou URL
+            <input name="url" [(ngModel)]="imageDraft.url" [disabled]="!!imageDraft.file" placeholder="https://…" />
+          </label>
+          <label class="full">
+            Légende
+            <input name="caption" [(ngModel)]="imageDraft.caption" maxlength="300" />
+          </label>
+          <div class="row full">
+            <span class="spacer"></span>
+            <button type="button" (click)="addingImage.set(false)">Annuler</button>
+            <button class="primary" type="submit" [disabled]="busy() || (!imageDraft.file && !imageDraft.url.trim())">
+              Ajouter le visuel
+            </button>
+          </div>
+        </form>
+      }
+
+      @if (error()) {
+        <p class="error">{{ error() }}</p>
+      }
+
+      <div class="row actions">
+        <button class="small" (click)="addingImage.set(true)" [disabled]="addingImage()">+ Visuel</button>
+        <button class="small" (click)="editing.set(true)">Modifier</button>
+        <span class="spacer"></span>
+        <button class="small danger" (click)="remove()" [disabled]="busy()">Supprimer</button>
+      </div>
+    }
+  </div>
+</article>
+
+@if (zoomed(); as url) {
+  <div class="backdrop" (click)="zoomed.set(null)">
+    <img class="zoom" [src]="url | imgUrl" alt="Visuel en grand" />
+  </div>
+}

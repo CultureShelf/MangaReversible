@@ -1,0 +1,35 @@
+.head {
+  margin-bottom: 1rem;
+}
+
+.filter {
+  max-width: 360px;
+  margin-bottom: 1.25rem;
+}
+
+.series-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.series-card img,
+.series-card .cover-placeholder {
+  box-shadow: var(--shadow);
+  transition: transform 0.15s ease;
+}
+
+.series-card:hover img,
+.series-card:hover .cover-placeholder {
+  transform: translateY(-3px);
+}
+
+.series-card strong {
+  font-size: 0.95rem;
+}
+
+.small {
+  font-size: 0.8rem;
+}

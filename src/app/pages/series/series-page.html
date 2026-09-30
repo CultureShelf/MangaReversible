@@ -1,0 +1,128 @@
+@if (error() && !series()) {
+  <p class="error">{{ error() }}</p>
+}
+
+@if (series(); as s) {
+  <section class="hero">
+    @if (s.coverUrl) {
+      <img class="cover" [src]="s.coverUrl | imgUrl" [alt]="s.title" />
+    } @else {
+      <div class="cover-placeholder">{{ s.title.charAt(0) }}</div>
+    }
+    <div class="hero-info">
+      <h1>{{ s.title }}</h1>
+      <p class="muted">
+        @if (s.originalTitle) { {{ s.originalTitle }} · }
+        @if (s.authors) { {{ s.authors }} · }
+        @if (s.year) { {{ s.year }} · }
+        {{ s.mediaKind }}
+      </p>
+      <div class="row">
+        <span class="badge owned">{{ stats().owned }} / {{ stats().volumes }} tomes</span>
+        @if (stats().collectorEditions) {
+          <span class="badge collector">{{ stats().collectorEditions }} éditions spéciales</span>
+        }
+        @if (s.source) {
+          <span class="badge">Source : {{ s.source }}</span>
+        }
+      </div>
+      @if (s.description) {
+        <p class="description" [class.open]="showDescription()">{{ s.description }}</p>
+        <button class="link" (click)="showDescription.set(!showDescription())">
+          {{ showDescription() ? 'Réduire' : 'Lire la suite' }}
+        </button>
+      }
+      <div class="row hero-actions">
+        @if (s.source) {
+          <button (click)="refresh()" [disabled]="busy()" title="Récupère les nouveaux tomes et couvertures">
+            ↻ Synchroniser
+          </button>
+        }
+        <button (click)="addingVolume.set(true)" [disabled]="addingVolume()">+ Tome</button>
+        <span class="spacer"></span>
+        <button class="danger" (click)="deleteSeries()" [disabled]="busy()">Retirer la série</button>
+      </div>
+      @if (addingVolume()) {
+        <form class="row add-volume" (ngSubmit)="addVolume()">
+          <input name="number" [(ngModel)]="newVolumeNumber" placeholder="Numéro (ex. 12, 0, Fanbook…)" required />
+          <button class="primary" type="submit" [disabled]="busy() || !newVolumeNumber.trim()">Ajouter</button>
+          <button type="button" (click)="addingVolume.set(false)">Annuler</button>
+        </form>
+      }
+      @if (error()) {
+        <p class="error">{{ error() }}</p>
+      }
+    </div>
+  </section>
+
+  @if (s.volumes.length === 0) {
+    <p class="empty">Le catalogue ne connaît pas encore de tome pour cette série. Ajoutez-les avec « + Tome ».</p>
+  }
+
+  <div class="cover-grid volumes">
+    @for (v of s.volumes; track v.id) {
+      @let status = volumeStatus(v);
+      <button class="volume" [attr.data-status]="status" (click)="openVolume(v)">
+        @if (volumeCover(v)) {
+          <img class="cover" [src]="volumeCover(v) | imgUrl" [alt]="'Tome ' + v.number" loading="lazy" />
+        } @else {
+          <div class="cover-placeholder">{{ v.number }}</div>
+        }
+        <span class="row volume-meta">
+          <strong>T{{ v.number }}</strong>
+          @if (collectorCount(v)) {
+            <span class="badge collector" title="Éditions spéciales">★ {{ collectorCount(v) }}</span>
+          }
+          <span class="spacer"></span>
+          @if (status === 'OWNED') {
+            <span class="badge owned">✓</span>
+          } @else if (status === 'PREORDERED') {
+            <span class="badge preordered">Précommandé</span>
+          } @else if (status === 'WISHLIST') {
+            <span class="badge wishlist">♡</span>
+          }
+        </span>
+      </button>
+    }
+  </div>
+
+  @if (selectedVolume(); as vol) {
+    <div class="backdrop" (click)="closeVolume()">
+      <div class="dialog card volume-dialog" role="dialog" [attr.aria-label]="'Tome ' + vol.number"
+           (click)="$event.stopPropagation()">
+        <div class="row">
+          <h2>{{ s.title }} — Tome {{ vol.number }}</h2>
+          <span class="spacer"></span>
+          <button class="small" (click)="closeVolume()" aria-label="Fermer">✕</button>
+        </div>
+        @if (vol.title) {
+          <p class="muted">{{ vol.title }}</p>
+        }
+
+        <div class="variants">
+          @for (variant of vol.variants; track variant.id) {
+            <app-variant-card [variant]="variant" [fallbackCover]="vol.coverUrl"
+                              (changed)="onVariantChanged(vol.id, $event)"
+                              (deleted)="onVariantDeleted(vol.id, variant.id)" />
+          }
+        </div>
+
+        @if (addingVariant()) {
+          <div class="card new-variant">
+            <h3>Nouvelle édition</h3>
+            <app-variant-form [busy]="busy()" (saved)="createVariant(vol.id, $event)"
+                              (cancelled)="addingVariant.set(false)" />
+          </div>
+        } @else {
+          <div class="row">
+            <button class="primary" (click)="addingVariant.set(true)">+ Édition collector / jaquette</button>
+            <span class="spacer"></span>
+            <button class="small danger" (click)="deleteVolume(vol)" [disabled]="busy()">Supprimer le tome</button>
+          </div>
+        }
+      </div>
+    </div>
+  }
+} @else if (!error()) {
+  <p class="muted">Chargement…</p>
+}

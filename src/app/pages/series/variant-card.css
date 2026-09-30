@@ -1,0 +1,177 @@
+.variant {
+  display: grid;
+  grid-template-columns: 170px 1fr;
+  gap: 1.1rem;
+  padding: 1rem;
+  border-left: 4px solid transparent;
+}
+
+.variant[data-status='OWNED'] {
+  border-left-color: var(--owned);
+}
+
+.variant[data-status='PREORDERED'] {
+  border-left-color: var(--preordered);
+}
+
+.variant[data-status='WISHLIST'] {
+  border-left-color: var(--wishlist);
+}
+
+.visual {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  perspective: 900px;
+}
+
+/* Retournement de jaquette */
+.flip {
+  display: grid;
+  transform-style: preserve-3d;
+  transition: transform 0.5s ease;
+}
+
+.flip.flipped {
+  transform: rotateY(180deg);
+}
+
+.face {
+  grid-area: 1 / 1;
+  backface-visibility: hidden;
+}
+
+.face.back {
+  transform: rotateY(180deg);
+}
+
+.zoomable {
+  cursor: zoom-in;
+}
+
+.dim {
+  opacity: 0.45;
+  filter: grayscale(0.6);
+}
+
+.thumbs {
+  display: flex;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+}
+
+.thumb {
+  width: 36px;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.thumb.active {
+  border-color: var(--accent);
+}
+
+.thumb img {
+  aspect-ratio: 2 / 3;
+  object-fit: cover;
+}
+
+.caption {
+  margin: 0;
+  font-size: 0.8rem;
+}
+
+h3 {
+  margin: 0.5rem 0;
+}
+
+dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.2rem 0.75rem;
+  margin: 0 0 0.75rem;
+  font-size: 0.9rem;
+}
+
+dt {
+  color: var(--text-muted);
+}
+
+dd {
+  margin: 0;
+}
+
+.description {
+  font-size: 0.9rem;
+  white-space: pre-line;
+}
+
+.status {
+  display: inline-flex;
+  flex-wrap: wrap;
+  margin: 0.25rem 0 0.5rem;
+}
+
+.status button {
+  border-radius: 0;
+  margin-left: -1px;
+  font-size: 0.85rem;
+}
+
+.status button:first-child {
+  border-radius: 6px 0 0 6px;
+}
+
+.status button:last-child {
+  border-radius: 0 6px 6px 0;
+}
+
+.status button.on {
+  background: var(--surface-2);
+  font-weight: 700;
+}
+
+.status button.on[data-status='OWNED'] {
+  background: var(--owned-soft);
+  color: var(--owned);
+}
+
+.status button.on[data-status='PREORDERED'] {
+  background: var(--preordered-soft);
+  color: var(--preordered);
+}
+
+.status button.on[data-status='WISHLIST'] {
+  background: var(--wishlist-soft);
+  color: var(--wishlist);
+}
+
+.item {
+  font-size: 0.85rem;
+  margin: 0 0 0.5rem;
+}
+
+.item-form,
+.image-form {
+  margin: 0.5rem 0 0.75rem;
+  padding: 0.75rem;
+  border-radius: 6px;
+  background: var(--surface-2);
+}
+
+.actions {
+  margin-top: 0.75rem;
+}
+
+.zoom {
+  max-width: 100%;
+  max-height: calc(100vh - 2rem);
+  border-radius: 6px;
+}
+
+@media (max-width: 560px) {
+  .variant {
+    grid-template-columns: 110px 1fr;
+  }
+}

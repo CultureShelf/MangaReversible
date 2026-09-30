@@ -1,0 +1,62 @@
+<h1>Ajouter une série</h1>
+<p class="muted">
+  Les séries, tomes et couvertures viennent d'un catalogue externe. Vous ajoutez ensuite vos éditions collector,
+  jaquettes alternatives et leurs visuels.
+</p>
+
+<form class="row search" (submit)="search($event)">
+  @if (providers().length > 1) {
+    <select class="source" [value]="source()" (change)="source.set($any($event.target).value)" aria-label="Catalogue">
+      @for (p of providers(); track p.source) {
+        <option [value]="p.source">{{ p.displayName }}</option>
+      }
+    </select>
+  }
+  <input type="search" placeholder="Titre de la série (ex. Frieren, One Piece…)" autofocus
+         [value]="query()" (input)="query.set($any($event.target).value)" aria-label="Titre" />
+  <button class="primary" type="submit" [disabled]="loading() || !query().trim()">
+    {{ loading() ? 'Recherche…' : 'Rechercher' }}
+  </button>
+</form>
+
+@if (error()) {
+  <p class="error">{{ error() }}</p>
+}
+
+@if (results(); as results) {
+  @if (results.length === 0) {
+    <p class="empty">Aucun résultat.</p>
+  }
+  <ul class="results">
+    @for (r of results; track r.externalId) {
+      <li class="card result">
+        @if (r.coverUrl) {
+          <img class="cover" [src]="r.coverUrl | imgUrl" [alt]="r.title" loading="lazy" />
+        } @else {
+          <div class="cover-placeholder">{{ r.title.charAt(0) }}</div>
+        }
+        <div class="info">
+          <h3>{{ r.title }}</h3>
+          <p class="muted meta">
+            @if (r.originalTitle) { {{ r.originalTitle }} · }
+            @if (r.authors.length) { {{ r.authors.join(', ') }} · }
+            @if (r.year) { {{ r.year }} · }
+            {{ r.mediaKind }}
+          </p>
+          @if (r.description) {
+            <p class="description">{{ r.description }}</p>
+          }
+        </div>
+        <div class="actions">
+          @if (r.importedSeriesId) {
+            <a class="button" [routerLink]="['/series', r.importedSeriesId]">Déjà dans l'étagère →</a>
+          } @else {
+            <button class="primary" (click)="import(r)" [disabled]="importing() !== null">
+              {{ importing() === r.externalId ? 'Import…' : 'Ajouter' }}
+            </button>
+          }
+        </div>
+      </li>
+    }
+  </ul>
+}

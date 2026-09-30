@@ -1,59 +1,58 @@
 # MangaReversible
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.0.3.
+Front Angular pour gérer sa collection de **mangas collector** : éditions limitées, jaquettes alternatives,
+jaquettes réversibles, exclusivités salon, coffrets… avec leurs visuels.
 
-## Development server
+Il s'appuie sur l'API générique [CultureShelf](../CultureShelfBack), qui combine le catalogue MangaDex
+(séries, tomes, couvertures) et nos propres données collector.
 
-To start a local development server, run:
+## Fonctionnalités
 
-```bash
-ng serve
-```
+- **Ajouter une série** : recherche dans MangaDex puis import en un clic. Les tomes et leurs couvertures
+  (en français quand elles existent) sont créés automatiquement, avec une « Édition standard » par tome.
+- **Ma collection** : étagère de séries avec progression (tomes possédés / parus), onglets Précommandes et Wishlist.
+- **Page série** : grille des tomes (possédés en couleur, les autres atténués, ★ = éditions spéciales).
+  Un clic sur un tome ouvre ses éditions :
+  - ajout / modification d'une édition (type, éditeur, ISBN, date, prix, tirage, contenu bonus) ;
+  - visuels uploadés ou par URL (couverture, dos, tranche, verso de jaquette, goodies), zoom plein écran ;
+  - **« Retourner la jaquette »** quand un visuel « Verso de jaquette » est présent ;
+  - statut dans la collection (Wishlist / Précommandé / Possédé) et détails de l'exemplaire
+    (état, date, prix payé, quantité, notes).
+- Ajout manuel de tomes absents du catalogue, resynchronisation avec MangaDex.
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+## Lancer en développement
 
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
-```bash
-ng generate component component-name
-```
-
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
-
-```bash
-ng generate --help
-```
-
-## Building
-
-To build the project run:
+Démarrer d'abord le back (http://localhost:8090), puis :
 
 ```bash
-ng build
+npm install
+npm start
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+Ouvrir http://localhost:4200. L'URL de l'API se règle dans `src/environments/environment*.ts`
+(le front doit aussi être autorisé côté back : `cultureshelf.cors.allowed-origins`).
 
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
+## Build et Docker
 
 ```bash
-ng test
+npm run build            # dist/MangaReversible/browser
+docker build -t manga-reversible .
+docker run -p 4200:80 manga-reversible
 ```
 
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
+## Tests
 
 ```bash
-ng e2e
+npm test
 ```
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+## Structure
 
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+```
+src/app/
+  core/        modèles (miroir des DTO), ApiService, libellés FR, pipe imgUrl
+  pages/
+    collection/  étagère + précommandes + wishlist
+    search/      recherche et import depuis le catalogue externe
+    series/      détail d'une série, cartes d'édition (variant-card) et formulaire (variant-form)
+```

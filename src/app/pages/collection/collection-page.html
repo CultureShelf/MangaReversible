@@ -1,0 +1,85 @@
+<div class="row head">
+  <div>
+    <h1>Ma collection</h1>
+    @if (series()) {
+      <p class="muted">
+        {{ stats().series }} séries · {{ stats().ownedVolumes }} tomes possédés ·
+        {{ stats().ownedVariants }} éditions
+      </p>
+    }
+  </div>
+  <span class="spacer"></span>
+  <a class="button primary" routerLink="/search">+ Ajouter une série</a>
+</div>
+
+@if (error()) {
+  <p class="error">{{ error() }}</p>
+}
+
+<div class="tabs" role="tablist">
+  <button role="tab" [class.active]="tab() === 'series'" (click)="selectTab('series')">Séries</button>
+  <button role="tab" [class.active]="tab() === 'PREORDERED'" (click)="selectTab('PREORDERED')">
+    Précommandes ({{ stats().preordered }})
+  </button>
+  <button role="tab" [class.active]="tab() === 'WISHLIST'" (click)="selectTab('WISHLIST')">
+    Wishlist ({{ stats().wishlist }})
+  </button>
+</div>
+
+@if (tab() === 'series') {
+  @if (series() === null && !error()) {
+    <p class="muted">Chargement…</p>
+  } @else if (series()?.length === 0) {
+    <div class="empty">
+      <p>Votre étagère est vide.</p>
+      <a class="button primary" routerLink="/search">Rechercher une première série</a>
+    </div>
+  } @else {
+    <input class="filter" type="search" placeholder="Filtrer par titre ou auteur…"
+           [value]="filter()" (input)="filter.set($any($event.target).value)" />
+    <div class="cover-grid">
+      @for (s of filteredSeries(); track s.id) {
+        <a class="series-card" [routerLink]="['/series', s.id]">
+          @if (s.coverUrl) {
+            <img class="cover" [src]="s.coverUrl | imgUrl" [alt]="s.title" loading="lazy" />
+          } @else {
+            <div class="cover-placeholder">{{ s.title.charAt(0) }}</div>
+          }
+          <strong>{{ s.title }}</strong>
+          <div class="progress" [title]="s.ownedVolumes + ' / ' + s.volumeCount + ' tomes'">
+            <span [style.width.%]="progress(s)"></span>
+          </div>
+          <span class="muted small">
+            {{ s.ownedVolumes }} / {{ s.volumeCount }} tomes
+            @if (s.ownedVariants > s.ownedVolumes) {
+              · {{ s.ownedVariants }} éditions
+            }
+          </span>
+        </a>
+      }
+    </div>
+  }
+} @else {
+  @if (entries() === null) {
+    <p class="muted">Chargement…</p>
+  } @else if (entries()!.length === 0) {
+    <p class="empty">Rien pour l'instant.</p>
+  } @else {
+    <div class="cover-grid">
+      @for (e of entries(); track e.item.id) {
+        <a class="series-card" [routerLink]="['/series', e.seriesId]" [queryParams]="{ volume: e.volumeId }">
+          @if (e.coverUrl) {
+            <img class="cover" [src]="e.coverUrl | imgUrl" [alt]="e.seriesTitle" loading="lazy" />
+          } @else {
+            <div class="cover-placeholder">{{ e.volumeNumber }}</div>
+          }
+          <strong>{{ e.seriesTitle }} — T{{ e.volumeNumber }}</strong>
+          <span class="muted small">{{ e.variantName }}</span>
+          @if (e.variantType !== 'STANDARD') {
+            <span><span class="badge collector">{{ variantTypes[e.variantType] }}</span></span>
+          }
+        </a>
+      }
+    </div>
+  }
+}

@@ -1,0 +1,107 @@
+.hero {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.hero > .cover,
+.hero > .cover-placeholder {
+  box-shadow: var(--shadow);
+}
+
+.hero-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.hero-info p {
+  margin: 0;
+}
+
+.description {
+  font-size: 0.92rem;
+  white-space: pre-line;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.description.open {
+  display: block;
+}
+
+.hero-info > .link {
+  align-self: flex-start;
+}
+
+.hero-actions {
+  margin-top: 0.5rem;
+}
+
+.add-volume {
+  flex-wrap: nowrap;
+  max-width: 480px;
+}
+
+.volume {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.4rem;
+  padding: 0;
+  border: none;
+  background: none;
+  text-align: left;
+}
+
+.volume:hover:not(:disabled) {
+  background: none;
+}
+
+.volume .cover,
+.volume .cover-placeholder {
+  box-shadow: var(--shadow);
+  transition: transform 0.15s ease;
+}
+
+.volume:hover .cover,
+.volume:hover .cover-placeholder {
+  transform: translateY(-3px);
+}
+
+/* Tomes non possedes : couverture attenuee */
+.volume:not([data-status='OWNED']) .cover {
+  opacity: 0.55;
+}
+
+.volume-meta {
+  flex-wrap: nowrap;
+  gap: 0.3rem;
+}
+
+.volume-dialog {
+  width: min(860px, 100%);
+}
+
+.variants {
+  display: grid;
+  gap: 1rem;
+  margin: 1rem 0;
+}
+
+.new-variant {
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+@media (max-width: 600px) {
+  .hero {
+    grid-template-columns: 110px 1fr;
+    gap: 1rem;
+  }
+}
